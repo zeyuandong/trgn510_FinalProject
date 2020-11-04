@@ -13,7 +13,7 @@
 * RNA-seq is an important technique used to study gene expression. For the RNA-SEQ data, edgeR (Robinson, McCarthy, and Smyth 2010) and limma packets from the Bioconductor project (Huber et al. 2015) provide a complete statistical set method for dealing with this problem.Bioconductor's advantage is that it can quickly and efficiently analyze RNA sequencing data. After obtaining the RNA-Seq gene expression matrix, we need to preprocess the data and then conduct the difference analysis.
 
 **2. Objectives**
-* I will use the Bioconductor method to analyze RNA-seq from White people aged 20 to 80 years who had died of Bronchus and Lung cancer, and analyze the relationship between age and this cancer
+* I will use the Bioconductor method to analyze RNA-seq from White people aged 41-50 and 51-60 years who had died of Bronchus and Lung cancer, and analyze the relationship between age and this cancer.I selected 25 data for each age group.
 
 **3. References/Links to Vignettes**
 * https://www.bioconductor.org/packages/devel/workflows/vignettes/RNAseq123/inst/doc/limmaWorkflow_CHN.html

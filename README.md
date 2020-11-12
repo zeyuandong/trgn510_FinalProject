@@ -1,6 +1,6 @@
 # TRGN510_Final Project
 ## Title
-**RNA sequence analysis was performed in caucasians aged 41-50 years and 51-60 years who died of bronchial and lung cancer**
+**Analysis of RNA-seq in bladder cancer in White people and Asians**
 
 ## Author
 **Zeyuan Dong**
@@ -13,22 +13,23 @@
 * RNA-seq is an important technique used to study gene expression. For the RNA-SEQ data, edgeR (Robinson, McCarthy, and Smyth 2010) and limma packets from the Bioconductor project (Huber et al. 2015) provide a complete statistical set method for dealing with this problem.Bioconductor's advantage is that it can quickly and efficiently analyze RNA sequencing data. After obtaining the RNA-Seq gene expression matrix, we need to preprocess the data and then conduct the difference analysis.
 
 **2. Objectives**
-* I will use the Bioconductor method to analyze RNA-seq from White people aged 41-50 and 51-60 years who had died of Bronchus and Lung cancer, and analyze the relationship between age and this cancer.I selected 25 data for each age group.
+* I will use https://www.bioconductor.org/packages/devel/workflows/vignettes/RNAseq123/inst/doc/limmaWorkflow_CHN.html outlined in the working process of the analysis of data.I will analyze RNA-seq in bladder cancer in white and Asian people and analyze the relationship between race and this cancer. 
 
 **3. References/Links to Vignettes**
 * https://www.bioconductor.org/packages/devel/workflows/vignettes/RNAseq123/inst/doc/limmaWorkflow_CHN.html
 
-
 ## Data
-* I will download the data from this website:https://portal.gdc.cancer.gov/repository?facetTab=cases&filters=%7B%22op%22%3A%22and%22%2C%22content%22%3A%5B%7B%22op%22%3A%22in%22%2C%22content%22%3A%7B%22field%22%3A%22cases.demographic.race%22%2C%22value%22%3A%5B%22white%22%5D%7D%7D%2C%7B%22content%22%3A%7B%22field%22%3A%22cases.diagnoses.age_at_diagnosis%22%2C%22value%22%3A%5B7305%5D%7D%2C%22op%22%3A%22%3E%3D%22%7D%2C%7B%22content%22%3A%7B%22field%22%3A%22cases.diagnoses.age_at_diagnosis%22%2C%22value%22%3A%5B29584%5D%7D%2C%22op%22%3A%22%3C%3D%22%7D%2C%7B%22op%22%3A%22in%22%2C%22content%22%3A%7B%22field%22%3A%22cases.disease_type%22%2C%22value%22%3A%5B%22squamous%20cell%20neoplasms%22%5D%7D%7D%2C%7B%22op%22%3A%22in%22%2C%22content%22%3A%7B%22field%22%3A%22cases.primary_site%22%2C%22value%22%3A%5B%22bronchus%20and%20lung%22%5D%7D%7D%2C%7B%22op%22%3A%22in%22%2C%22content%22%3A%7B%22field%22%3A%22cases.project.program.name%22%2C%22value%22%3A%5B%22TCGA%22%5D%7D%7D%2C%7B%22op%22%3A%22in%22%2C%22content%22%3A%7B%22field%22%3A%22cases.project.project_id%22%2C%22value%22%3A%5B%22TCGA-LUSC%22%5D%7D%7D%5D%7D&searchTableTab=files
-
-
+* From the national cancer institute GDC data portal (https://portal.gdc.cancer.gov/), I will download the publicly available data sets. I divided the data into two groups, one white and one Asian. I selected 34 data points for each group, including 30 men and four women (only 4 Asian women developed bladder cancer after screening).
 
 ## Milestone 1(November 3rd)
-* I will download the data I need from the above website, obtain the RNA-SEQ gene expression matrix, and then preprocess the data in Rstudio.
+* By filtering, I get the RNA-SEQ data from the GDC data portal and read it into RStudio. And according to the process of data preprocessing at https://www.bioconductor.org/packages/devel/workflows/vignettes/RNAseq123/inst/doc/limmaWorkflow.html.
+
+* Install the required R package and set up the work path. Unzip the data, rename the file, and transfer it to the working directory. The count data is read in through the readDGE function and processed. Deletion of low-expression genes and normalization of gene expression distribution. Unsupervised clustering of samples and MDS diagram drawing.
 
 ## Milestone 2(November 12th)
-* I want to analyze the correlation between different ages and Bronchus and Lung cancer through the analysis of differences, and I want to show them through the data graph.
+* Conduct differential expression analysis, use the camera for genome testing to establish a design matrix, make the comparison, eliminate heteroscedastic in counting data, detect the number of DE genes, detect single DE genes from top to bottom, and carry out visual processing of data.
+
+* Use camera for genomic testing, search for appropriate Hallmark genomic collections and use camera functionality for competitive testing to assess whether genes in a given gene set rank high in differential expression relative to genes outside of that set.
 
 ## Deliverable(November 17th)
 * R markdown

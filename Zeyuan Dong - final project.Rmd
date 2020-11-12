@@ -1,0 +1,502 @@
+---
+title: "Zeyuan Dong-510 final project"
+author: "Zeyuan Dong"
+date: "11/10/2020"
+output: html_document
+---
+**Part 1 - set up**
+```{R}
+
+#if (!requireNamespace("BiocManager", quietly = TRUE))
+#    install.packages("BiocManager")
+#BiocManager::install("Glimma")
+#BiocManager::install("limma")
+#BiocManager::install("edgeR")
+#BiocManager::install("Homo.sapiens")
+#BiocManager::install("stringr")
+library(limma)
+library(Glimma)
+library(edgeR)
+library(Homo.sapiens)#for human genes
+library(stringr)
+setwd('/Users/dongzeyuan/Desktop/zeyuan-510final')
+
+
+```
+
+**Part 2 - Unzip**
+```{r}
+# unzip whitemale data
+setwd('/Users/dongzeyuan/Desktop/zeyuan-510final/WhiteMale')
+dir.create("SampleFiles")
+filepath <- dir(path ="./gdc_download_20201111_071754.200344",full.names = TRUE)
+for(wd in filepath){
+  files <-dir(path = wd,pattern="gz$") #
+  fromfilepath <- paste(wd,"/",files,sep ="")
+  tofilepath <- paste("./SampleFiles/",files,sep ="")
+  file.copy(fromfilepath,tofilepath)
+}
+
+# unzip whitefemale data
+setwd('/Users/dongzeyuan/Desktop/zeyuan-510final/WhiteFemale')
+dir.create("SampleFiles2")
+filepath <- dir(path ="./gdc_download_20201111_071940.367741",full.names = TRUE)
+for(wd in filepath){
+  files <-dir(path = wd,pattern="gz$") 
+  fromfilepath <- paste(wd,"/",files,sep ="")
+  tofilepath <- paste("./SampleFiles2/",files,sep ="")
+  file.copy(fromfilepath,tofilepath)
+}
+
+# unzip asianfemale data
+setwd('/Users/dongzeyuan/Desktop/zeyuan-510final/AsianFemale')
+dir.create("SampleFiles3")
+filepath <- dir(path ="./gdc_download_20201111_071444.004912",full.names = TRUE)
+for(wd in filepath){
+  files <-dir(path = wd,pattern="gz$") 
+  fromfilepath <- paste(wd,"/",files,sep ="")
+  tofilepath <- paste("./SampleFiles3/",files,sep ="")
+  file.copy(fromfilepath,tofilepath)
+}
+
+# unzip asianmale data
+setwd('/Users/dongzeyuan/Desktop/zeyuan-510final/AsianMale')
+dir.create("SampleFiles4")
+filepath <- dir(path ="./gdc_download_20201111_071307.660905",full.names = TRUE)
+for(wd in filepath){
+  files <-dir(path = wd,pattern="gz$") 
+  fromfilepath <- paste(wd,"/",files,sep ="")
+  tofilepath <- paste("./SampleFiles4/",files,sep ="")
+  file.copy(fromfilepath,tofilepath)
+}
+# Check Files and manuanlly unzip desired data
+```
+
+**Part 3 - Rename and transfer files to working directory**
+```{r}
+#tarDir <- "/Users/dongzeyuan/Desktop/zeyuan-510final/TwoGroups"
+#dir.create(tarDir)
+      
+#setwd("/Users/dongzeyuan/Desktop/zeyuan-510final/TwoGroups")
+#old_files1 <- list.files("/Users/dongzeyuan/Desktop/zeyuan-510final/WhiteMale/SampleFiles", pattern = ".htseq.counts", full.names = TRUE)
+#new_files1 <- c("WM01.htseq.counts",
+#"WM02.htseq.counts",
+#"WM03.htseq.counts",
+#"WM04.htseq.counts",
+#"WM05.htseq.counts",
+#"WM06.htseq.counts",
+#"WM07.htseq.counts",
+#"WM08.htseq.counts",
+#"WM09.htseq.counts",
+#"WM10.htseq.counts",
+#"WM11.htseq.counts",
+#"WM12.htseq.counts",
+#"WM13.htseq.counts",
+#"WM14.htseq.counts",
+#"WM15.htseq.counts",
+#"WM16.htseq.counts",
+#"WM17.htseq.counts",
+#"WM18.htseq.counts",
+#"WM19.htseq.counts",
+#"WM20.htseq.counts",
+#"WM21.htseq.counts",
+#"WM22.htseq.counts",
+#"WM23.htseq.counts",
+#"WM24.htseq.counts",
+#"WM25.htseq.counts",
+#"WM26.htseq.counts",
+#"WM27.htseq.counts",
+#"WM28.htseq.counts",
+#"WM29.htseq.counts",
+#"WM30.htseq.counts")
+
+#file.copy(from = old_files1, to = new_files1)
+
+
+#old_files2 <- list.files("/Users/dongzeyuan/Desktop/zeyuan-510final/WhiteFemale/SampleFiles2", pattern = ".htseq.counts", full.names = TRUE)
+#new_files2 <- c("WF01.htseq.counts",
+#"WF02.htseq.counts",
+#"WF03.htseq.counts",
+#"WF04.htseq.counts")
+
+#file.copy(from = old_files2, to = new_files2)
+
+#old_files3 <- list.files("/Users/dongzeyuan/Desktop/zeyuan-510final/AsianFemale/SampleFiles3", pattern = ".htseq.counts", full.names = TRUE)
+#new_files3 <- c("AF01.htseq.counts",
+#"AF02.htseq.counts",
+#"AF03.htseq.counts",
+#"AF04.htseq.counts")
+
+#file.copy(from = old_files3, to = new_files3)
+
+
+#old_files4 <- list.files("/Users/dongzeyuan/Desktop/zeyuan-510final/AsianMale/SampleFiles4", pattern = ".htseq.counts", full.names = TRUE)
+#new_files4 <- c("AM01.htseq.counts",
+#"AM02.htseq.counts",
+#"AM03.htseq.counts",
+#"AM04.htseq.counts",
+#"AM05.htseq.counts",
+#"AM06.htseq.counts",
+#"AM07.htseq.counts",
+#"AM08.htseq.counts",
+#"AM09.htseq.counts",
+#"AM10.htseq.counts",
+#"AM11.htseq.counts",
+#"AM12.htseq.counts",
+#"AM13.htseq.counts",
+#"AM14.htseq.counts",
+#"AM15.htseq.counts",
+#"AM16.htseq.counts",
+#"AM17.htseq.counts",
+#"AM18.htseq.counts",
+#"AM19.htseq.counts",
+#"AM20.htseq.counts",
+#"AM21.htseq.counts",
+#"AM22.htseq.counts",
+#"AM23.htseq.counts",
+#"AM24.htseq.counts",
+#"AM25.htseq.counts",
+#"AM26.htseq.counts",
+#"AM27.htseq.counts",
+#"AM28.htseq.counts",
+#"AM29.htseq.counts",
+#"AM30.htseq.counts")
+
+#file.copy(from = old_files4, to = new_files4)
+
+
+```
+
+
+**Part 4 - Reading in counts data via readDGE**
+```{r}
+setwd('/Users/dongzeyuan/Desktop/zeyuan-510final/TwoGroups')
+files <- c("WM01.htseq.counts",
+"WM02.htseq.counts",
+"WM03.htseq.counts",
+"WM04.htseq.counts",
+"WM05.htseq.counts",
+"WM06.htseq.counts",
+"WM07.htseq.counts",
+"WM08.htseq.counts",
+"WM09.htseq.counts",
+"WM10.htseq.counts",
+"WM11.htseq.counts",
+"WM12.htseq.counts",
+"WM13.htseq.counts",
+"WM14.htseq.counts",
+"WM15.htseq.counts",
+"WM16.htseq.counts",
+"WM17.htseq.counts",
+"WM18.htseq.counts",
+"WM19.htseq.counts",
+"WM20.htseq.counts",
+"WM21.htseq.counts",
+"WM22.htseq.counts",
+"WM23.htseq.counts",
+"WM24.htseq.counts",
+"WM25.htseq.counts",
+"WM26.htseq.counts",
+"WM27.htseq.counts",
+"WM28.htseq.counts",
+"WM29.htseq.counts",
+"WM30.htseq.counts","WF01.htseq.counts",
+"WF02.htseq.counts",
+"WF03.htseq.counts",
+"WF04.htseq.counts","AF01.htseq.counts",
+"AF02.htseq.counts",
+"AF03.htseq.counts",
+"AF04.htseq.counts",
+"AM01.htseq.counts",
+"AM02.htseq.counts",
+"AM03.htseq.counts",
+"AM04.htseq.counts",
+"AM05.htseq.counts",
+"AM06.htseq.counts",
+"AM07.htseq.counts",
+"AM08.htseq.counts",
+"AM09.htseq.counts",
+"AM10.htseq.counts",
+"AM11.htseq.counts",
+"AM12.htseq.counts",
+"AM13.htseq.counts",
+"AM14.htseq.counts",
+"AM15.htseq.counts",
+"AM16.htseq.counts",
+"AM17.htseq.counts",
+"AM18.htseq.counts",
+"AM19.htseq.counts",
+"AM20.htseq.counts",
+"AM21.htseq.counts",
+"AM22.htseq.counts",
+"AM23.htseq.counts",
+"AM24.htseq.counts",
+"AM25.htseq.counts",
+"AM26.htseq.counts",
+"AM27.htseq.counts",
+"AM28.htseq.counts",
+"AM29.htseq.counts",
+"AM30.htseq.counts")
+#for(i in paste(files, ".gz", sep=""))
+#  R.utils::gunzip(i, overwrite=TRUE)
+
+x <- readDGE(files, columns=c(1,2))
+```
+
+**Part 5 - Sorting Data**
+```{r}
+# strip the suffix
+samplenames <-  substring(colnames(x), 1, 4)
+samplenames
+
+colnames(x) <- samplenames
+```
+
+```{r}
+# Group by Race
+group <- as.factor(rep(c("White","Asian"),c(34,34)))
+x$samples$group <- group 
+
+# Group by gender
+gender <- as.factor(rep(c("Male","Female","Male"),c(30,8,30)))
+x$samples$gender<-gender
+```
+
+
+```{r}
+# Look for the geneid corresponding gene-symbols and locations of chromosome
+geneid <- rownames(x)
+#geneid
+# Remove the decimal point at ENSEMBL
+gene <- str_match(geneid, "(\\w*).*")
+geneid <- gene[,2]
+# go through Homo pacakge and get symbol and chromosome location
+genes <- select(Homo.sapiens, 
+                keys=geneid,
+                columns=c("SYMBOL","TXCHROM"),
+                keytype="ENSEMBL")
+head(genes)
+# remove the overlapped genes
+genes <- genes[!duplicated(genes$ENSEMBL),]
+# import genes to DGEList
+x$genes <- genes
+#x
+```
+
+**Part 6 - Data preprocessing**
+```{r}
+cpm <- cpm(x)
+lcpm <- cpm(x, log=TRUE)
+
+```
+
+
+```{r}
+# Get the average and median of the sample library size 
+L <- mean(x$samples$lib.size) * 1e-6
+M <- median(x$samples$lib.size) * 1e-6
+c(L, M)
+
+```
+
+
+```{r}
+# see the summary
+summary(lcpm)
+
+```
+
+```{r}
+# to filter genes, while keeping as many genes as possible with worthwhile counts.
+keep.exprs <- filterByExpr(x, group=group)  
+x <- x[keep.exprs,, keep.lib.sizes=FALSE]
+dim(x)
+```
+
+
+```{r}
+# Compare the data before and after filtering
+lcpm.cutoff <- log2(5/M + 2/L)
+library(RColorBrewer)
+nsamples <- ncol(x)
+col <- brewer.pal(nsamples, "Paired")
+par(mfrow=c(1,2))
+plot(density(lcpm[,1]), col=col[1], lwd=2, ylim=c(0,0.26), las=2, main="", xlab="")
+title(main="A. Raw data", xlab="Log-cpm")
+abline(v=lcpm.cutoff, lty=3)
+for (i in 2:nsamples){
+den <- density(lcpm[,i])
+lines(den$x, den$y, col=col[i], lwd=2)
+}
+legend("topright", samplenames, text.col=col, bty="n")
+lcpm <- cpm(x, log=TRUE)
+plot(density(lcpm[,1]), col=col[1], lwd=2, ylim=c(0,0.26), las=2, main="", xlab="")
+title(main="B. Filtered data", xlab="Log-cpm")
+abline(v=lcpm.cutoff, lty=3)
+for (i in 2:nsamples){
+den <- density(lcpm[,i])
+lines(den$x, den$y, col=col[i], lwd=2)
+}
+legend("topright", samplenames, text.col=col, bty="n")
+
+
+```
+
+```{r}
+# normalization
+x <- calcNormFactors(x, method = "TMM")
+x$samples$norm.factors
+
+```
+
+
+```{r}
+# To give a better visual representation of the effects of normalisation, the data was duplicated then adjusted so that the counts of the first sample are reduced to 5% of their original values, and in the second sample they are inflated to be 5-times larger.
+x2 <- x
+x2$samples$norm.factors <- 1
+x2$counts[,1] <- ceiling(x2$counts[,1]*0.05)
+x2$counts[,2] <- x2$counts[,2]*5
+
+```
+
+```{r}
+par(mfrow=c(1,2))
+lcpm <- cpm(x2, log=TRUE)
+boxplot(lcpm, las=2, col=col, main="")
+title(main="A. Example: Unnormalised data",ylab="Log-cpm")
+x2 <- calcNormFactors(x2)  
+x2$samples$norm.factors
+```
+
+
+```{r}
+lcpm <- cpm(x2, log=TRUE)
+boxplot(lcpm, las=2, col=col, main="")
+title(main="B. Example: Normalised data",ylab="Log-cpm")
+```
+**Part 7 - Unsupervised clustering of samples**
+```{r}
+# By Race
+lcpm <- cpm(x, log=TRUE)
+par(mfrow=c(1,2))
+col.group <- group
+levels(col.group) <-  brewer.pal(nlevels(col.group), "Set1")
+col.group <- as.character(col.group)
+plotMDS(lcpm, labels=group, col=col.group)
+title(main="A. Sample groups")
+
+
+# By gender
+lcpm <- cpm(x, log=TRUE)
+par(mfrow=c(1,2))
+col.gender <- gender
+levels(col.gender) <-  brewer.pal(nlevels(col.gender), "Set1")
+col.gender <- as.character(col.gender)
+plotMDS(lcpm, labels=gender, col=col.gender)
+title(main="B. Sample genders")
+```
+
+```{r}
+# The glMDSPlot function generates an html page (that is opened in a browser if launch=TRUE) with an MDS plot in the left panel and a barplot showing the proportion of variation explained by each dimension in the right panel. 
+glMDSPlot(lcpm, groups=group,genders=gender)
+```
+
+**Part 8 - Differential expression analysis**
+```{r}
+# Creating a design matrix and contrasts
+design <- model.matrix(~0+group+gender)
+colnames(design) <- gsub("group", "", colnames(design))
+design
+```
+
+```{r}
+
+contr.matrix <- makeContrasts(
+   RaceVS= White - Asian,
+
+   levels = colnames(design))
+contr.matrix
+```
+
+
+```{r}
+# Removing heteroscedascity from count data
+par(mfrow=c(1,2))
+v <- voom(x, design, plot=TRUE)
+v
+
+vfit <- lmFit(v, design)
+vfit <- contrasts.fit(vfit, contrasts=contr.matrix)
+efit <- eBayes(vfit)
+plotSA(efit, main="Final model: Mean-variance trend")
+
+```
+
+
+
+```{r}
+# Examining the number of DE genes
+summary(decideTests(efit, p.value = 0.05))# significance: p.value=0.05
+
+tfit <- treat(vfit, lfc=log2(1.5))# get more differentially expressed  genes
+dt <- decideTests(tfit, p.value=0.05)
+summary(dt)
+```
+
+
+```{r}
+
+tfit <- treat(vfit, lfc=log2(1.5))
+dt <- decideTests(tfit, p.value = 0.05)
+summary(dt)
+
+```
+
+
+```{r}
+# Examining individual DE genes from top to bottom
+RaceVS <- topTreat(tfit, coef=1, n=Inf)
+head(RaceVS)
+
+```
+
+
+```{r}
+# plotMD function
+plotMD(tfit, column=1, status=dt[,1], main=colnames(tfit)[1], 
+       xlim=c(-8,13))
+
+glMDPlot(tfit, coef=1, status=dt, main=colnames(tfit)[1],
+         side.main="ENSEMBL", counts=lcpm, groups=group, launch=FALSE)
+```
+
+
+
+```{r}
+# get heatmap of log-CPM values
+library(gplots)
+RaceVS.topgenes <- RaceVS$ENSEMBL[1:100]
+i <- which(v$genes$ENSEMBL %in% RaceVS.topgenes)
+mycol <- colorpanel(1000,"blue","white","red")
+heatmap.2(lcpm[i,], scale="row",
+   labRow=v$genes$SYMBOL[i], labCol=group, 
+   col=mycol, trace="none", density.info="none", 
+   lhei=NULL, dendrogram="column")
+
+```
+**Part 9 - Gene set testing with camera**
+```{r}
+load('/Users/dongzeyuan/Desktop/zeyuan-510final/human_c2_v5p2.rdata')
+#load(system.file("extdata", "human_c2_v5p2.rda", package = "RNAseq123"))
+idx <- ids2indices(Hs.c2,id=rownames(v$genes))
+cam.RaceVS <- camera(v,idx,design,contrast=contr.matrix[,1])
+head(cam.RaceVS,60)# look for appropriate hallmark gene sets
+```
+
+
+```{r}
+# use camera function to perform a competitive test to assess whether the genes in a given set are highly ranked in terms of differential expression relative to genes that are not in the set.
+barcodeplot(efit$t[,1], index=idx$KANG_IMMORTALIZED_BY_TERT_DN, 
+            index2=idx$REACTOME_REMOVAL_OF_THE_FLAP_INTERMEDIATE_FROM_THE_C_STRAND, main="RaceVS")
+
+```

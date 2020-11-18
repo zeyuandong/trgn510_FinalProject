@@ -31,6 +31,8 @@
 
 * Use camera for genomic testing, search for appropriate Hallmark genomic collections and use camera functionality for competitive testing to assess whether genes in a given gene set rank high in differential expression relative to genes outside of that set.
 
+* Revise the final product and make it more readable
+
 ## Deliverable(November 17th)
 * R markdown
 * Workflow released on https://rpubs.com/Zeyuan0311/692533

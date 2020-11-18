@@ -1,6 +1,6 @@
 # TRGN510_Final Project
 ## Title
-**Analysis of RNA-seq in bladder cancer in White people and Asians**
+**RNA-seq Analysis of bladder cancer in White and Asian Male population**
 
 ## Author
 **Zeyuan Dong**

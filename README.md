@@ -26,10 +26,14 @@
 
 * Install the required R package and set up the work path. Unzip the data, rename the file, and transfer it to the working directory. The count data is read in through the readDGE function and processed. Deletion of low-expression genes and normalization of gene expression distribution. Unsupervised clustering of samples and MDS diagram drawing.
 
+* Update: This milestone 1 has been accomplished.(11/3/2020)
+
 ## Milestone 2(November 12th)
 * Conduct differential expression analysis, use the camera for genome testing to establish a design matrix, make the comparison, eliminate heteroscedastic in counting data, detect the number of DE genes, detect single DE genes from top to bottom, and carry out visual processing of data.
 
 * Use camera for genomic testing, search for appropriate Hallmark genomic collections and use camera functionality for competitive testing to assess whether genes in a given gene set rank high in differential expression relative to genes outside of that set.
+
+* Update: This milestone 2 has been accomplished.(11/12/2020)
 
 * Revise the final product and make it more readable
 

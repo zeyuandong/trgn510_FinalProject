@@ -1,0 +1,542 @@
+---
+title: "Zeyuan Dong -510 Final Project"
+author: "Zeyuan Dong"
+date: "11/17/2020"
+output: html_document
+---
+
+# RNA-seq Analysis of bladder cancer in White and Asian Male population
+
+## Introduction
+
+- Cluster analysis shows that race is a dominant factor under the given situation while gender is not an important factor. The number of alive Asian females who have bladder cancer is also insufficient, so the differences in gene expression between white men with bladder cancer and Asian men were focused on, which could provide relatively meaningful information.
+
+- From the UniProt data, SEMA4D shows the most significant association with bladder cancer because it is a cell surface receptor that plays a role in cell-cell signaling. Endothelial cell migration, caused by sema4d, is induced by activation of the PTK2B/PYK2 pathway and other kinase-Akt pathways. MAN1is a specific inhibitor of TGF and can be a pro-oncogene; thus, its importance should not be ignored. 
+
+- Via using heat maps, we found that most Asian men expressed the genes in a similar pattern, and most white men expressed the genes in another specific way. Also, most of the up-regulated genes in Asian men are down-regulated in white men, vice versa.
+
+- Finally, Camera function was utilized to perform a competitive test to assess whether genes in a given set rank higher in expression differences than genes not in that set.
+
+## Data
+- From the national cancer institute GDC data portal (https://portal.gdc.cancer.gov/), I have downloaded the publicly available data sets. 
+- Cancer：Bladder
+- Program：TCGA
+- Project：TCGA-BLCA
+- Disease Type：Transitional cell papillomas and carcinomas
+- Age at diagnosis ：From 34-90
+- Vital Status：Alive
+- In this case, there are only four samples of Asian women, so I planned to conduct RNA-Seq Analysis of Cancer in White and Asian Male population, thus dividing the data into two groups—White male and Asian male. I selected 34 data points for each group, including 30 men and four women.
+
+## References/Links to Vignettes
+- Law CW, Alhamdoosh M, Su S et al. RNA-seq analysis is easy as 1-2-3 with limma, Glimma and edgeR [version 3; peer review: 3 approved]. F1000Research 2018, 5:1408  https://www.bioconductor.org/packages/devel/workflows/vignettes/RNAseq123/inst/doc/limmaWorkflow.html
+
+
+## Part 1 - set up
+```{R}
+
+#if (!requireNamespace("BiocManager", quietly = TRUE))
+#    install.packages("BiocManager")
+#BiocManager::install("Glimma")
+#BiocManager::install("limma")
+#BiocManager::install("edgeR")
+#BiocManager::install("Homo.sapiens")
+#BiocManager::install("stringr")
+library(limma)
+library(Glimma)
+library(edgeR)
+library(Homo.sapiens)#for human genes
+library(stringr)
+setwd('/Users/dongzeyuan/Desktop/zeyuan-510final')
+```
+
+## Part 2 - Unzip
+```{r}
+# unzip whitemale data
+setwd('/Users/dongzeyuan/Desktop/zeyuan-510final/WhiteMale')
+dir.create("SampleFiles")
+filepath <- dir(path ="./gdc_download_20201111_071754.200344",full.names = TRUE)
+for(wd in filepath){
+  files <-dir(path = wd,pattern="gz$") #
+  fromfilepath <- paste(wd,"/",files,sep ="")
+  tofilepath <- paste("./SampleFiles/",files,sep ="")
+  file.copy(fromfilepath,tofilepath)
+}
+
+# unzip whitefemale data
+setwd('/Users/dongzeyuan/Desktop/zeyuan-510final/WhiteFemale')
+dir.create("SampleFiles2")
+filepath <- dir(path ="./gdc_download_20201111_071940.367741",full.names = TRUE)
+for(wd in filepath){
+  files <-dir(path = wd,pattern="gz$") 
+  fromfilepath <- paste(wd,"/",files,sep ="")
+  tofilepath <- paste("./SampleFiles2/",files,sep ="")
+  file.copy(fromfilepath,tofilepath)
+}
+
+# unzip asianfemale data
+setwd('/Users/dongzeyuan/Desktop/zeyuan-510final/AsianFemale')
+dir.create("SampleFiles3")
+filepath <- dir(path ="./gdc_download_20201111_071444.004912",full.names = TRUE)
+for(wd in filepath){
+  files <-dir(path = wd,pattern="gz$") 
+  fromfilepath <- paste(wd,"/",files,sep ="")
+  tofilepath <- paste("./SampleFiles3/",files,sep ="")
+  file.copy(fromfilepath,tofilepath)
+}
+
+# unzip asianmale data
+setwd('/Users/dongzeyuan/Desktop/zeyuan-510final/AsianMale')
+dir.create("SampleFiles4")
+filepath <- dir(path ="./gdc_download_20201111_071307.660905",full.names = TRUE)
+for(wd in filepath){
+  files <-dir(path = wd,pattern="gz$") 
+  fromfilepath <- paste(wd,"/",files,sep ="")
+  tofilepath <- paste("./SampleFiles4/",files,sep ="")
+  file.copy(fromfilepath,tofilepath)
+}
+# Check Files and manuanlly unzip desired data
+```
+
+## Part 3 - Rename and transfer files to working directory
+```{r}
+#tarDir <- "/Users/dongzeyuan/Desktop/zeyuan-510final/TwoGroups"
+#dir.create(tarDir)
+      
+#setwd("/Users/dongzeyuan/Desktop/zeyuan-510final/TwoGroups")
+#old_files1 <- list.files("/Users/dongzeyuan/Desktop/zeyuan-510final/WhiteMale/SampleFiles", pattern = ".htseq.counts", full.names = TRUE)
+#new_files1 <- c("WM01.htseq.counts",
+#"WM02.htseq.counts",
+#"WM03.htseq.counts",
+#"WM04.htseq.counts",
+#"WM05.htseq.counts",
+#"WM06.htseq.counts",
+#"WM07.htseq.counts",
+#"WM08.htseq.counts",
+#"WM09.htseq.counts",
+#"WM10.htseq.counts",
+#"WM11.htseq.counts",
+#"WM12.htseq.counts",
+#"WM13.htseq.counts",
+#"WM14.htseq.counts",
+#"WM15.htseq.counts",
+#"WM16.htseq.counts",
+#"WM17.htseq.counts",
+#"WM18.htseq.counts",
+#"WM19.htseq.counts",
+#"WM20.htseq.counts",
+#"WM21.htseq.counts",
+#"WM22.htseq.counts",
+#"WM23.htseq.counts",
+#"WM24.htseq.counts",
+#"WM25.htseq.counts",
+#"WM26.htseq.counts",
+#"WM27.htseq.counts",
+#"WM28.htseq.counts",
+#"WM29.htseq.counts",
+#"WM30.htseq.counts")
+
+#file.copy(from = old_files1, to = new_files1)
+
+
+#old_files2 <- list.files("/Users/dongzeyuan/Desktop/zeyuan-510final/WhiteFemale/SampleFiles2", pattern = ".htseq.counts", full.names = TRUE)
+#new_files2 <- c("WF01.htseq.counts",
+#"WF02.htseq.counts",
+#"WF03.htseq.counts",
+#"WF04.htseq.counts")
+
+#file.copy(from = old_files2, to = new_files2)
+
+#old_files3 <- list.files("/Users/dongzeyuan/Desktop/zeyuan-510final/AsianFemale/SampleFiles3", pattern = ".htseq.counts", full.names = TRUE)
+#new_files3 <- c("AF01.htseq.counts",
+#"AF02.htseq.counts",
+#"AF03.htseq.counts",
+#"AF04.htseq.counts")
+
+#file.copy(from = old_files3, to = new_files3)
+
+
+#old_files4 <- list.files("/Users/dongzeyuan/Desktop/zeyuan-510final/AsianMale/SampleFiles4", pattern = ".htseq.counts", full.names = TRUE)
+#new_files4 <- c("AM01.htseq.counts",
+#"AM02.htseq.counts",
+#"AM03.htseq.counts",
+#"AM04.htseq.counts",
+#"AM05.htseq.counts",
+#"AM06.htseq.counts",
+#"AM07.htseq.counts",
+#"AM08.htseq.counts",
+#"AM09.htseq.counts",
+#"AM10.htseq.counts",
+#"AM11.htseq.counts",
+#"AM12.htseq.counts",
+#"AM13.htseq.counts",
+#"AM14.htseq.counts",
+#"AM15.htseq.counts",
+#"AM16.htseq.counts",
+#"AM17.htseq.counts",
+#"AM18.htseq.counts",
+#"AM19.htseq.counts",
+#"AM20.htseq.counts",
+#"AM21.htseq.counts",
+#"AM22.htseq.counts",
+#"AM23.htseq.counts",
+#"AM24.htseq.counts",
+#"AM25.htseq.counts",
+#"AM26.htseq.counts",
+#"AM27.htseq.counts",
+#"AM28.htseq.counts",
+#"AM29.htseq.counts",
+#"AM30.htseq.counts")
+
+#file.copy(from = old_files4, to = new_files4)
+
+
+```
+
+
+## Part 4 - Reading in counts data via readDGE
+```{r}
+setwd('/Users/dongzeyuan/Desktop/zeyuan-510final/TwoGroups')
+files <- c("WM01.htseq.counts","WM02.htseq.counts","WM03.htseq.counts","WM04.htseq.counts","WM05.htseq.counts","WM06.htseq.counts","WM07.htseq.counts","WM08.htseq.counts","WM09.htseq.counts","WM10.htseq.counts","WM11.htseq.counts","WM12.htseq.counts","WM13.htseq.counts","WM14.htseq.counts","WM15.htseq.counts","WM16.htseq.counts","WM17.htseq.counts","WM18.htseq.counts","WM19.htseq.counts","WM20.htseq.counts","WM21.htseq.counts","WM22.htseq.counts","WM23.htseq.counts","WM24.htseq.counts","WM25.htseq.counts","WM26.htseq.counts","WM27.htseq.counts","WM28.htseq.counts","WM29.htseq.counts","WM30.htseq.counts","WF01.htseq.counts","WF02.htseq.counts","WF03.htseq.counts","WF04.htseq.counts","AF01.htseq.counts","AF02.htseq.counts","AF03.htseq.counts","AF04.htseq.counts","AM01.htseq.counts","AM02.htseq.counts","AM03.htseq.counts","AM04.htseq.counts","AM05.htseq.counts","AM06.htseq.counts","AM07.htseq.counts","AM08.htseq.counts","AM09.htseq.counts","AM10.htseq.counts","AM11.htseq.counts","AM12.htseq.counts","AM13.htseq.counts","AM14.htseq.counts","AM15.htseq.counts","AM16.htseq.counts","AM17.htseq.counts","AM18.htseq.counts","AM19.htseq.counts","AM20.htseq.counts","AM21.htseq.counts","AM22.htseq.counts","AM23.htseq.counts","AM24.htseq.counts","AM25.htseq.counts","AM26.htseq.counts","AM27.htseq.counts","AM28.htseq.counts","AM29.htseq.counts","AM30.htseq.counts")
+#for(i in paste(files, ".gz", sep=""))
+#  R.utils::gunzip(i, overwrite=TRUE)
+
+x <- readDGE(files, columns=c(1,2))
+```
+**males only**
+```{r}
+setwd('/Users/dongzeyuan/Desktop/zeyuan-510final/TwoGroups')
+files_male_only <- c("WM01.htseq.counts","WM02.htseq.counts","WM03.htseq.counts","WM04.htseq.counts","WM05.htseq.counts","WM06.htseq.counts","WM07.htseq.counts","WM08.htseq.counts","WM09.htseq.counts","WM10.htseq.counts","WM11.htseq.counts","WM12.htseq.counts","WM13.htseq.counts","WM14.htseq.counts","WM15.htseq.counts","WM16.htseq.counts","WM17.htseq.counts","WM18.htseq.counts","WM19.htseq.counts","WM20.htseq.counts","WM21.htseq.counts","WM22.htseq.counts","WM23.htseq.counts","WM24.htseq.counts","WM25.htseq.counts","WM26.htseq.counts","WM27.htseq.counts","WM28.htseq.counts","WM29.htseq.counts","WM30.htseq.counts","AM01.htseq.counts","AM02.htseq.counts","AM03.htseq.counts","AM04.htseq.counts","AM05.htseq.counts","AM06.htseq.counts","AM07.htseq.counts","AM08.htseq.counts","AM09.htseq.counts","AM10.htseq.counts","AM11.htseq.counts","AM12.htseq.counts","AM13.htseq.counts","AM14.htseq.counts","AM15.htseq.counts","AM16.htseq.counts","AM17.htseq.counts","AM18.htseq.counts","AM19.htseq.counts","AM20.htseq.counts","AM21.htseq.counts","AM22.htseq.counts","AM23.htseq.counts","AM24.htseq.counts","AM25.htseq.counts","AM26.htseq.counts","AM27.htseq.counts","AM28.htseq.counts","AM29.htseq.counts","AM30.htseq.counts")
+
+x_male_only <-readDGE(files_male_only, columns=c(1,2))
+```
+## Part 5 - Data Sorting 
+```{r}
+# strip the suffix
+samplenames <-  substring(colnames(x), 1, 4)
+samplenames
+
+colnames(x) <- samplenames
+```
+```{r}
+samplenames_males_only <-  substring(colnames(x_male_only), 1, 4)
+#samplenames
+
+colnames(x_male_only) <- samplenames_males_only
+```
+
+**Add ‘Race’ as a factor, consisting of White and Asian**
+
+**Add ‘gender’ as a factor, similar to ‘Lane’ in the article, consisting of Males and Females.**
+
+```{r}
+# Group by Race
+group <- as.factor(rep(c("White","Asian"),c(34,34)))
+x$samples$group <- group 
+
+# Group by gender
+gender <- as.factor(rep(c("Male","Female","Male"),c(30,8,30)))
+x$samples$gender<-gender
+```
+
+```{r}
+group_male_only <- as.factor(rep(c("White","Asian"),c(30,30)))
+x_male_only$samples$group <- group_male_only 
+
+gender_male_only <- as.factor(rep(c("Male","Male"),c(30,30)))
+x_male_only$samples$gender<-gender_male_only
+```
+
+```{r}
+# Look for the geneid corresponding gene-symbols and locations of chromosome
+geneid <- rownames(x)
+#geneid
+# Remove the decimal point at ENSEMBL
+gene <- str_match(geneid, "(\\w*).*")
+geneid <- gene[,2]
+# go through Homo pacakge and get symbol and chromosome location
+genes <- select(Homo.sapiens, 
+                keys=geneid,
+                columns=c("SYMBOL","TXCHROM"),
+                keytype="ENSEMBL")
+head(genes)
+# remove the overlapped genes
+genes <- genes[!duplicated(genes$ENSEMBL),]
+# import genes to DGEList
+x$genes <- genes
+#x
+```
+```{r}
+# Look for the geneid corresponding gene-symbols and locations of chromosome
+geneid_male_only <- rownames(x_male_only)
+#geneid
+# Remove the decimal point at ENSEMBL
+gene_male_only <- str_match(geneid_male_only, "(\\w*).*")
+geneid_male_only <- gene_male_only[,2]
+# go through Homo pacakge and get symbol and chromosome location
+genes_male_only <- select(Homo.sapiens, 
+                keys=geneid,
+                columns=c("SYMBOL","TXCHROM"),
+                keytype="ENSEMBL")
+#head(genes_male_only)
+# remove the overlapped genes
+genes_male_only <- genes_male_only[!duplicated(genes$ENSEMBL),]
+# import genes to DGEList
+x_male_only$genes <- genes_male_only
+#x
+```
+## Part 6 - Data preprocessing
+```{r}
+cpm <- cpm(x)
+lcpm <- cpm(x, log=TRUE)
+```
+
+```{r}
+cpm_male_only <- cpm(x_male_only)
+lcpm_male_only <- cpm(x_male_only, log=TRUE)
+```
+
+```{r}
+# Get the average and median of the sample library size 
+L <- mean(x$samples$lib.size) * 1e-6
+M <- median(x$samples$lib.size) * 1e-6
+c(L, M)
+```
+```{r}
+# Get the average and median of the sample library size 
+L_male_only <- mean(x_male_only$samples$lib.size) * 1e-6
+M_male_only <- median(x_male_only$samples$lib.size) * 1e-6
+#c(L, M)
+```
+
+```{r}
+# see the summary
+summary(lcpm)
+#summary(lcpm_male_only)
+```
+
+```{r}
+# to filter genes, while keeping as many genes as possible with worthwhile counts.
+keep.exprs <- filterByExpr(x, group=group)  
+x <- x[keep.exprs,, keep.lib.sizes=FALSE]
+dim(x)
+```
+```{r}
+# to filter genes, while keeping as many genes as possible with worthwhile counts.
+keep.exprs <- filterByExpr(x_male_only, group=group)  
+x_male_only <- x_male_only[keep.exprs,, keep.lib.sizes=FALSE]
+#dim(x_male_only)
+```
+
+**Comparison of Raw data and filtered data**
+
+- The density of log-CPM values for 'raw pre-filtered data' and 'post-filtered data' are displayed respectively. Vertical dotted lines means the log-CPM threshold (around 0.2) utilized in the filtering step.
+
+```{r}
+# Compare the data before and after filtering
+lcpm.cutoff <- log2(5/M + 2/L)
+library(RColorBrewer)
+nsamples <- ncol(x)
+col <- brewer.pal(nsamples, "Paired")
+par(mfrow=c(1,2))
+plot(density(lcpm[,1]), col=col[1], lwd=2, ylim=c(0,0.26), las=2, main="", xlab="")
+title(main="A. Raw data", xlab="Log-cpm")
+abline(v=lcpm.cutoff, lty=3)
+for (i in 2:nsamples){
+den <- density(lcpm[,i])
+lines(den$x, den$y, col=col[i], lwd=2)
+}
+legend("topright", samplenames, text.col=col, bty="n")
+lcpm <- cpm(x, log=TRUE)
+plot(density(lcpm[,1]), col=col[1], lwd=2, ylim=c(0,0.26), las=2, main="", xlab="")
+title(main="B. Filtered data", xlab="Log-cpm")
+abline(v=lcpm.cutoff, lty=3)
+for (i in 2:nsamples){
+den <- density(lcpm[,i])
+lines(den$x, den$y, col=col[i], lwd=2)
+}
+legend("topright", samplenames, text.col=col, bty="n")
+```
+
+```{r}
+lcpm_male_only.cutoff <- log2(5/M + 2/L)
+lcpm_male_only <- cpm(x_male_only, log=TRUE)
+```
+
+```{r}
+# normalization
+x <- calcNormFactors(x, method = "TMM")
+x$samples$norm.factors
+```
+
+```{r}
+# normalization
+x_male_only<- calcNormFactors(x_male_only, method = "TMM")
+x_male_only$samples$norm.factors
+```
+```{r}
+# To give a better visual representation of the effects of normalisation, the data was duplicated then adjusted so that the counts of the first sample are reduced to 5% of their original values, and in the second sample they are inflated to be 5-times larger.
+x2 <- x
+x2$samples$norm.factors <- 1
+x2$counts[,1] <- ceiling(x2$counts[,1]*0.05)
+x2$counts[,2] <- x2$counts[,2]*5
+```
+
+**Comparison of unnormalised data and normalised data**
+
+- Boxplots of log-CPM values displaying the expression distributions for 'unnormalised data' and 'normalised data'  respectively.
+
+```{r}
+par(mfrow=c(1,2))
+lcpm <- cpm(x2, log=TRUE)
+boxplot(lcpm, las=2, col=col, main="")
+title(main="A. Example: Unnormalised data",ylab="Log-cpm")
+x2 <- calcNormFactors(x2)  
+x2$samples$norm.factors
+
+lcpm <- cpm(x2, log=TRUE)
+boxplot(lcpm, las=2, col=col, main="")
+title(main="B. Example: Normalised data",ylab="Log-cpm")
+```
+
+## Part 7 - Unsupervised clustering of samples
+
+**MDS plots of log-CPM values over dimensions-1 and 2 with samples coloured and labeled by race(White and Asian) while over dimensions-3 and 4 with samples coloured and labeled by gender(Male and Female). Distances on the plot is corresponding to the leading fold-change, i.e. the root-mean-square log 2-fold-change for the genes divergence between each pair of samples.**
+
+**[Discussion] After cluster analysis, it can be seen from Figure A that the gene expression of most white people and Asian people is very different. As shown in Figure B, gender is not an important factor since the 8 points of female did not form a cluster although some points of males are clustered. Therefore, the differences in gene expression between white men and Asian men who have bladder cancer are regarded as my research interest, which could provide meaningful information.**
+```{r}
+# By Race
+lcpm <- cpm(x, log=TRUE)
+par(mfrow=c(1,2))
+col.group <- group
+levels(col.group) <-  brewer.pal(nlevels(col.group), "Set1")
+col.group <- as.character(col.group)
+plotMDS(lcpm, labels=group, col=col.group)
+title(main="A. Sample groups")
+
+# By gender
+lcpm <- cpm(x, log=TRUE)
+
+col.gender <- gender
+levels(col.gender) <-  brewer.pal(nlevels(col.gender), "Set2")
+col.gender <- as.character(col.gender)
+plotMDS(lcpm, labels=gender, col=col.gender, dim=c(3,4))
+title(main="B. Sample genders")
+```
+
+```{r}
+# The glMDSPlot function generates an html page (that is opened in a browser if launch=TRUE) with an MDS plot in the left panel and a barplot showing the proportion of variation explained by each dimension in the right panel. 
+glMDSPlot(lcpm, groups=group,labels=paste(gender,sep="-"))
+```
+
+## Part 8 - Differential expression analysis
+
+**From now, only males data for Differential expression analysis**
+
+**The horizontal blue line marks the average log 2 residual standard deviation. Each black dot represents a gene and the red curve is fitted to these points.**
+
+```{r}
+# Creating a design matrix and contrasts
+design <- model.matrix(~0+group_male_only)
+colnames(design) <- gsub("group_male_only", "", colnames(design))
+design
+```
+
+```{r}
+contr.matrix <- makeContrasts(
+   RaceVS= White - Asian,
+
+   levels = colnames(design))
+contr.matrix
+```
+```{r}
+# Removing heteroscedascity from count data
+par(mfrow=c(1,2))
+v <- voom(x_male_only, design, plot=TRUE)
+v
+
+vfit <- lmFit(v, design)
+vfit <- contrasts.fit(vfit, contrasts=contr.matrix)
+efit <- eBayes(vfit)
+plotSA(efit, main="Final model: Mean-variance trend")
+
+```
+
+```{r}
+# Examining the number of DE genes
+summary(decideTests(efit, p.value = 0.05))# significance: p.value=0.05
+
+tfit <- treat(vfit, lfc=log2(1.8))# To get more differentially expressed  genes via using log2(1.8) instead of log2(2); log2(1.8) is still acceptable and relatively reliable compared with log2(1.5) or log2(1.2). 
+dt <- decideTests(tfit, p.value=0.05)
+summary(dt)
+```
+
+```{r}
+tfit <- treat(vfit, lfc=log2(1.8))
+dt <- decideTests(tfit, p.value = 0.05)
+summary(dt)
+```
+**Considering p-value, we choose top5 identified genes for further study, i.e.KRTAP12-3,TANC1,RPL32P1,MAN1 B1-DT and SEMA4D. KRTAP12-3 and TANC1 are upregulated, while others are downregulated. **
+
+**From data on UniProt, I hold the idea that SEMA4D is the most related to bladder cancer because it is a cell surface receptor that plays a role in cell-cell signaling. Whatsmore, it can induce endothelial cell migration via activating PTK2B/PYK2 pathway and other kinase-AKT pathways. **
+
+**MAN1 protein is equivalently vital because it functions as a specific repressor of TGF-beta, which is highly related to cancer.**
+
+**TANC1 is a scaffold component related to the nervous system. There is limited information about RPL32P1, but we know that this gene encodes a ribosomal protein, which is highly related to protein translation and metabolism.**
+
+**KRTAP12-3 is not so important as the other genes. This is because its function is more related to hair keratin only.**
+
+```{r}
+# Examining individual DE genes from top to bottom
+RaceVS <- topTreat(tfit, coef=1, n=Inf)
+head(RaceVS)
+```
+
+**visualization**
+- Mean-difference plots was generated via the plotMD function, displaying log-FCs from the linear model fit against the average log-CPM values. The differentially expressed genes are highlighted(Red:Upregulated genes;Blue:Downregulated genes)
+
+```{r}
+# plotMD function
+plotMD(tfit, column=1, status=dt[,1], main=colnames(tfit)[1], 
+       xlim=c(-8,13))
+#glMDPlot(tfit, coef=1, status=dt, main=colnames(tfit)[1],
+         #side.main="ENSEMBL", counts=lcpm_male_only, groups=group_male_only, launch=FALSE)
+```
+**HeatMap**
+
+- Heatmap of log-CPM values for top 100 genes DE in RaceVS (White vs Asian). Samples with relatively high expression of a given gene are shown in red and samples with relatively low expression are shown in blue. (Each row: a given gene; Each column: a sample). Lighter red/blue and white represent genes with intermediate expression levels. A dendrogram is shown for the sample clustering, which displays three main groups.
+
+- [Discussion] From the heatmap, it is evident that these 60 males can be divided into three groups: from left 1 to 11, from left 12 to 21, and from left 22 to 30. Most Asian males(from left 12 to 21) and white males(from left 1 to 11) share similar gene expression patterns in their groups. The rest of these males(from left 22 to 30) show a relatively more disordered gene expression pattern than the other two groups.
+
+```{r}
+# get heatmap of log-CPM values
+library(gplots)
+RaceVS.topgenes <- RaceVS$ENSEMBL[1:100]
+i <- which(v$genes$ENSEMBL %in% RaceVS.topgenes)
+mycol <- colorpanel(1000,"blue","white","red")
+heatmap.2(lcpm_male_only[i,], scale="row",
+   labRow=v$genes$SYMBOL[i], labCol=group_male_only, 
+   col=mycol, trace="none", density.info="none", 
+   lhei=NULL, dendrogram="column")
+
+```
+
+## Part 9 - Gene set testing with camera
+
+- Barcode plot of PACHER_TARGETS_OF_IGF1_AND_IGF2_UP (red bars, top of plot) and CHIARADONNA_NEOPLASTIC_TRANSFORMATION_KRAS_CDC25_DN (blue bars, bottom of plot) gene sets in the White vs Asian contrast. An enrichment line shows the relative enrichment of the vertical bars.
+
+- [Discussion] For upregulation, I choose PACHER_TARGETS_OF_IGF1_AND_IGF2_UP because some genes are also related to growth factors, as mentioned before. For downregulation, I choose CHIARADONNA_NEOPLASTIC_TRANSFORMATION_KRAS_CDC25_DN because KRAS is a common oncogene.
+```{r}
+load('/Users/dongzeyuan/Desktop/zeyuan-510final/human_c2_v5p2.rdata')
+#human_c2_v5p2.rdata is download from http://bioinf.wehi.edu.au/software/MSigDB/
+idx <- ids2indices(Hs.c2,id=rownames(v$genes))
+cam.RaceVS <- camera(v,idx,design,contrast=contr.matrix[,1])
+head(cam.RaceVS,20)# look for appropriate hallmark gene sets
+```
+
+```{r}
+# use camera function to perform a competitive test to assess whether the genes in a given set are highly ranked in terms of differential expression relative to genes that are not in the set.
+barcodeplot(efit$t[,1], index=idx$PACHER_TARGETS_OF_IGF1_AND_IGF2_UP, 
+            index2=idx$CHIARADONNA_NEOPLASTIC_TRANSFORMATION_KRAS_CDC25_DN, main="RaceVS")
+
+```
+
